@@ -1,5 +1,6 @@
 {
 	"token": "###your token###",
 	"secret": "###your secret###",
-	"zone": "is1a"
+	"zone": "is1a",
+	"disk_ids": "1234567890 9876543210"
 }

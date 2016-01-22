@@ -88,6 +88,20 @@ delete_archive(){
   return $?
 }
 
+check_target_disk(){
+  IS_TARGET_DISK=1
+  DISK_ID=${1}
+  TARGET_DISK_IDS=${2}
+
+  for TARGET_DISK_ID in $TARGET_DISK_IDS; do
+    if [ "$TARGET_DISK_ID" = "$DISK_ID" ]; then
+      IS_TARGET_DISK=0
+    fi
+  done
+
+  return $IS_TARGET_DISK
+}
+
 ###### MAIN Routine #####
 
 cmd_check curl
@@ -98,13 +112,19 @@ if [ -n "$1" ] ; then
     CONFIG="$1"
 fi
 
-read SEC_TOKEN SEC_SECRET SC_ZONE < <( json -a token secret zone < $CONFIG )
+read SEC_TOKEN SEC_SECRET SC_ZONE TARGET_DISK_IDS < <( json -a token secret zone disk_ids < $CONFIG )
 
 logger "===== START ====="
 TIMESTAMP="`date "+%Y%m%d"`"
 
 logger "get_disk_list()"
 get_disk_list | while read DISK_ID DISK_NAME ; do
+  check_target_disk "$DISK_ID" "$TARGET_DISK_IDS"
+  if [ $? -eq 1 ]; then
+    logger "[IGNORE] DISK_ID: $DISK_ID is not a target"
+    continue
+  fi
+
   logger "----- START: $DISK_ID ($DISK_NAME) -----"
   TMP_PREFIX="$RANDOM"
   TMP_ARCHIVE_JSON="${TMP_PREFIX}.archive.json"
